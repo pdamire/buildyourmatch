@@ -48,9 +48,10 @@ class _PointsStorePageState extends State<PointsStorePage> {
           if (_status.isNotEmpty) Text(_status),
           const Divider(),
           const Text(
-            'Notes: In production, credit points via a secure webhook '
-            '(e.g., Cloud Function/Supabase Edge Function) after 
-purchase.',
+  '''Notes: In production, credit points via a secure webhook
+(e.g., Cloud Function or Supabase Edge Function) after purchase.''',
+),
+
           ),
         ],
       ),

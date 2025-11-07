@@ -5,7 +5,7 @@ ThemeData buildAppTheme({Brightness brightness = Brightness.light}) {
   return ThemeData(
     colorScheme: scheme,
     useMaterial3: true,
-    cardTheme: const CardTheme(margin: EdgeInsets.all(8)),
+    cardTheme: cardTheme: const CardThemeData(margin: EdgeInsets.all(8)),
     appBarTheme: AppBarTheme(backgroundColor: scheme.surface, foregroundColor: scheme.onSurface),
   );
 }
