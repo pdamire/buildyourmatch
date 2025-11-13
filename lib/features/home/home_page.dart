@@ -1,3 +1,4 @@
+import 'package:build_your_match/features/progress/widgets/gm_progress_ring.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../theme.dart';
@@ -20,10 +21,13 @@ class _HomePageState extends State<HomePage> {
         Card(margin: const EdgeInsets.fromLTRB(16,16,16,8), child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(children:[
-            const GmProgressRing(value: .3),
+            GmProgressRing(value: .3),
             const SizedBox(width: 16),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children:[
-              Text('Grow first. Then meet.', style: context.titleSection),
+              Text(
+  'Grow first. Then meet.',
+  style: Theme.of(context).textTheme.titleLarge,
+),
               const SizedBox(height: 6),
               const Text('Streak: 3 days • XP: 75'),
               const SizedBox(height: 12),

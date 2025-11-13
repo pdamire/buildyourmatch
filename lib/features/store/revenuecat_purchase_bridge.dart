@@ -1,4 +1,17 @@
 import 'package:purchases_flutter/purchases_flutter.dart';
+  // Map RevenueCat product IDs to point rewards
+  static int pointsForProductId(String productId) {
+    switch (productId) {
+      case 'bym_onetime_access':        // one-time 1000 points
+        return PointsCosts.oneTimePurchasePoints;
+      case 'buildyourmatch_monthly':    // $9.99 / month
+        return PointsCosts.monthlySubscriptionPoints;
+      case 'buildyourmatch_yearly':     // $89.99 / year
+        return PointsCosts.yearlySubscriptionPoints;
+      default:
+        return 0;
+    }
+  }
 
 class RevenueCatPurchase {
   static Future<void> setup(String apiKey) async {

@@ -3,7 +3,7 @@ import 'package:purchases_flutter/purchases_flutter.dart';
 class RevenueCatPurchase {
   static Future<void> setup(String apiKey) async {
     await Purchases.setLogLevel(LogLevel.debug);
-    await Purchases.configure(PurchasesConfiguration(apiKey));
+    await Purchases.configure(PurchasesConfiguration("appl_QgFcEeAgCUomkUrUzwqvxLcqNlX"));
   }
 
   // Optional: stub to avoid later errors if you call purchaseProduct

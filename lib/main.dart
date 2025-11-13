@@ -1,7 +1,3 @@
-// These read from Codemagic Environment Variables
-const rcPublicSdkKeyIOS = String.fromEnvironment('RC_PUBLIC_SDK_KEY');
-const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
-const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:io' show Platform;
 import 'services/revenuecat_purchase.dart';
@@ -20,7 +16,10 @@ import 'features/chat/chat_page.dart';
 import 'features/store/points_store.dart';
 import 'features/admin/admin_page.dart';
 import 'models/challenge.dart';
-
+// These read from Codemagic Environment Variables
+const rcPublicSdkKeyIOS = String.fromEnvironment('RC_PUBLIC_SDK_KEY');
+const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 final _router = GoRouter(
   initialLocation: '/home',
   routes: [
