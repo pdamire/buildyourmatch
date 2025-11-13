@@ -1,5 +1,8 @@
+// These read from Codemagic Environment Variables
+const rcPublicSdkKeyIOS = String.fromEnvironment('RC_PUBLIC_SDK_KEY');
+const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
+const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'data/supabase_credentials.dart';  // <- the file you just created
 import 'dart:io' show Platform;
 import 'services/revenuecat_purchase.dart';
 import 'package:flutter/material.dart';
@@ -39,19 +42,16 @@ final _router = GoRouter(
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Supabase first
+  // 1. Initialize Supabase using environment variables
   await Supabase.initialize(
-    url: SupabaseCredentials.supabaseUrl,
-    anonKey: SupabaseCredentials.supabaseAnonKey,
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
   );
 
-  // Your RevenueCat iOS Public SDK key
-  const rcPublicSdkKeyIOS = 'appl_QgFcEeAgCUomkUrUzwqvxLcqNlX'; // Your actual key
+  // 2. Initialize RevenueCat using the environment key
+  await RevenueCatPurchase.setup(rcPublicSdkKeyIOS);
 
-  await RevenueCatPurchase.setup(
-    Platform.isIOS ? rcPublicSdkKeyIOS : 'unused',
-  );
-
+  // 3. Launch the app
   runApp(const BYMApp());
 }
 
