@@ -53,12 +53,10 @@ class PointsStorePage extends StatelessWidget {
 
           // ⚙️ Information Section
           Text(
-            'Points can be used to unlock photos, start chats, join video calls, or skip wait times.',
-            style: TextStyle(color: Colors.grey[600], height: 1.4),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+  'Points can be used to unlock photos, start chats, join video calls, or skip wait times.',
+  style: TextStyle(color: Colors.grey, height: 1.4),
+  textAlign: TextAlign.center,
+),
     );
   }
 
