@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'data/supabase_credentials.dart';  // <- the file you just created
 import 'dart:io' show Platform;
 import 'services/revenuecat_purchase.dart';
 import 'package:flutter/material.dart';
@@ -37,14 +39,20 @@ final _router = GoRouter(
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Replace this with your actual PUBLIC SDK KEY from RevenueCat (iOS)
-  const rcPublicSdkKeyIOS = 'YOUR_IOS_PUBLIC_SDK_KEY_HERE';
+  // Initialize Supabase first
+  await Supabase.initialize(
+    url: SupabaseCredentials.supabaseUrl,
+    anonKey: SupabaseCredentials.supabaseAnonKey,
+  );
+
+  // Your RevenueCat iOS Public SDK key
+  const rcPublicSdkKeyIOS = 'appl_QgFcEeAgCUomkUrUzwqvxLcqNlX'; // Your actual key
 
   await RevenueCatPurchase.setup(
     Platform.isIOS ? rcPublicSdkKeyIOS : 'unused',
   );
 
-  runApp(const MyApp());
+  runApp(const BYMApp());
 }
 
 
@@ -54,7 +62,7 @@ class BYMApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Build Your Match',
       theme: buildAppTheme(),
-      darkTheme: buildAppTheme(brightness: Brightness.dark),
+      darkTheme: buildAppThemeDark(),
       themeMode: ThemeMode.system,
       routerConfig: _router,
       localizationsDelegates: const [
