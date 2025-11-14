@@ -4,9 +4,8 @@ workflows:
     environment:
       flutter: stable
       xcode: latest
-
       groups:
-        - appstore     # add your group name here
+        - appstore
 
     scripts:
       - name: Force clear cache
@@ -28,9 +27,9 @@ workflows:
 
     publishing:
       app_store_connect:
-        apple_id: $APPLE_ID
-        password: $APP_SPECIFIC_PASSWORD
-        team_id: $APP_STORE_TEAM_ID
+        api_key: $APP_STORE_CONNECT_PRIVATE_KEY
+        key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
+        issuer_id: $APP_STORE_CONNECT_ISSUER_ID
         bundle_id: com.buildyourmatch.app
         submit_to_testflight: true
         submit_to_app_store: false
