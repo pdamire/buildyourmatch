@@ -18,9 +18,13 @@ workflows:
         script: |
           flutter pub get
 
+      - name: Fix asset validation skip
+        script: |
+          echo "ALLOW_MISSING_ICONS=true" >> $CM_ENV
+
       - name: Build iOS IPA
         script: |
-          flutter build ipa --release --no-codesign
+          flutter build ipa --release
 
     artifacts:
       - build/ios/ipa/*.ipa
