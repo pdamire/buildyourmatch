@@ -96,9 +96,10 @@ class ChallengeService {
         .neq('type', 'crossword') // keep crossword separate
         .limit(20);
 
-    if (answeredIds.isNotEmpty) {
-      query = query.not('id', 'in', answeredIds);
-    }
+   if (answeredIds.isNotEmpty) {
+  query = query.filter('id', 'not.in', answeredIds);
+}
+
 
     final res = await query;
     return List<Map<String, dynamic>>.from(res as List);
