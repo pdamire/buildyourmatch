@@ -65,8 +65,22 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Build Your Match'),
-        actions: [
+  title: const Text('Build Your Match'),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.person),
+      tooltip: 'Profile',
+      onPressed: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ProfilePage(),
+          ),
+        );
+      },
+    ),
+  ],
+),
           IconButton(
             onPressed: () => context.push('/store'),
             icon: const Icon(Icons.bolt),
@@ -196,3 +210,170 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+class ProfilePage extends StatelessWidget {
+  const ProfilePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Your Profile'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Basic Information',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // First name
+            const TextField(
+              decoration: InputDecoration(
+                labelText: 'First name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Last name
+            const TextField(
+              decoration: InputDecoration(
+                labelText: 'Last name',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Date of birth (for now just a text field shell)
+            const TextField(
+              decoration: InputDecoration(
+                labelText: 'Date of birth (YYYY-MM-DD)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            const Text(
+              'Location',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            const TextField(
+              decoration: InputDecoration(
+                labelText: 'City',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            const TextField(
+              decoration: InputDecoration(
+                labelText: 'Country',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            const Text(
+              'Languages you speak',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '(We will later turn this into nice selectable chips.)',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+            const SizedBox(height: 12),
+
+            const TextField(
+              decoration: InputDecoration(
+                labelText: 'Languages (e.g. English, Farsi, Spanish)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            const Text(
+              'Photos (up to 6)',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: List.generate(6, (index) {
+                return Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey.shade400),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Center(
+                    child: Text(
+                      'Photo ${index + 1}',
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                );
+              }),
+            ),
+            const SizedBox(height: 16),
+
+            const Text(
+              'Photo rules:',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              '• No nude photos.\n'
+              '• No photos of other people Photoshopped as you.\n'
+              '• Photos must be clear and not blurry.\n'
+              '• No harmful, abusive, or illegal content.\n'
+              '• You must have the right to share these photos.',
+              style: TextStyle(fontSize: 13),
+            ),
+            const SizedBox(height: 24),
+
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  // Later: save to Supabase
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Profile shell saved (not yet connected).'),
+                    ),
+                  );
+                },
+                child: const Text('Save Profile'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
