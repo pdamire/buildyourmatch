@@ -90,7 +90,7 @@ class ChallengeService {
         .map((e) => e['question_id'] as int)
         .toList(growable: false);
 
-    final query = client
+    var query = client
         .from('questions')
         .select()
         .neq('type', 'crossword') // keep crossword separate
