@@ -1,5 +1,16 @@
+// lib/features/store/points_store.dart
+
 import 'package:flutter/material.dart';
-import 'package:buildyourmatch/constants/points_costs.dart';
+
+// Local constants for point amounts and prices
+const int kMonthlySubscriptionPoints = 500;
+const double kMonthlySubscriptionPrice = 9.99;
+
+const int kYearlySubscriptionPoints = 1500;
+const double kYearlySubscriptionPrice = 89.99;
+
+const int kOneTimePurchasePoints = 1000;
+const double kOneTimePurchasePrice = 14.99;
 
 class PointsStorePage extends StatelessWidget {
   const PointsStorePage({super.key});
@@ -23,49 +34,49 @@ class PointsStorePage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // 🔹 Monthly Subscription
+          // Monthly Subscription
           _buildPlanCard(
             context: context,
             title: 'Monthly Plan',
             subtitle:
-                'Earn ${PointsCosts.monthlySubscriptionPoints} points every month.',
+                'Earn $kMonthlySubscriptionPoints points every month.',
             price:
-                '\$${PointsCosts.monthlySubscriptionPrice.toStringAsFixed(2)}/month',
+                '\$${kMonthlySubscriptionPrice.toStringAsFixed(2)}/month',
             tag: 'Best for trying premium features',
             highlight: true,
           ),
-
           const SizedBox(height: 12),
 
-          // 🔹 Yearly Subscription
+          // Yearly Subscription
           _buildPlanCard(
             context: context,
             title: 'Yearly Plan',
             subtitle:
-                'Earn ${PointsCosts.yearlySubscriptionPoints} points monthly.',
+                'Earn $kYearlySubscriptionPoints points monthly.',
             price:
-                '\$${PointsCosts.yearlySubscriptionPrice.toStringAsFixed(2)}/year',
-            tag: 'Save 25% – 1500 pts monthly',
+                '\$${kYearlySubscriptionPrice.toStringAsFixed(2)}/year',
+            tag: 'Save 25% | 1500 pts monthly',
+            highlight: true,
           ),
-
           const SizedBox(height: 12),
 
-          // 🔹 One-time Purchase
+          // One-time Purchase
           _buildPlanCard(
             context: context,
             title: 'One-time Purchase',
             subtitle:
-                '${PointsCosts.oneTimePurchasePoints} points instantly.',
+                'Get $kOneTimePurchasePoints points instantly.',
             price:
-                '\$${PointsCosts.oneTimePurchasePrice.toStringAsFixed(2)} (one-time)',
+                '\$${kOneTimePurchasePrice.toStringAsFixed(2)} (one-time)',
             tag: 'Perfect for casual users',
+            highlight: false,
           ),
-
           const SizedBox(height: 24),
 
-          // ℹ️ Info section
+          // Info section
           const Text(
-            'Points can be used to unlock photos, start chats, join video calls, or skip wait times.',
+            'Points can be used to unlock photos, start chats, '
+            'join video calls, or skip wait times on matches.',
             style: TextStyle(
               color: Colors.grey,
               height: 1.4,
@@ -118,14 +129,16 @@ class PointsStorePage extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               subtitle,
-              style: const TextStyle(color: Colors.black87),
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: 8),
             Text(
               tag,
               style: TextStyle(
-                color:
-                    highlight ? Colors.blue.shade700 : Colors.grey.shade700,
+                color: highlight ? Colors.blue.shade700 : Colors.grey.shade700,
                 fontSize: 13,
               ),
             ),
@@ -143,7 +156,7 @@ class PointsStorePage extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              child: Text(highlight ? 'Subscribe Monthly' : 'Purchase'),
+              child: Text(highlight ? 'Subscribe' : 'Purchase'),
             ),
           ],
         ),
