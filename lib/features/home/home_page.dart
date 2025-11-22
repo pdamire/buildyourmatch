@@ -1,15 +1,14 @@
-import 'package:buildyourmatch_final_starter_2/services/match_service.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../theme.dart';
 import '../../data/supabase_client.dart';
-import '../../data/challenge_service.dart';
-import '../../data/daily_dice_service.dart';
-import '../../data/points_service.dart';
-import '../../data/match_service.dart';
+import '../../auth/auth_gate.dart';
+import '../../services/points_service.dart';
+import '../../services/daily_dice_service.dart';
+import '../../services/challenge_service.dart';
+import '../../services/match_service.dart';
 import '../../models/challenge.dart';
-import 'daily_dice_card.dart';
 import '../progress/widgets/gm_progress_ring.dart';
 
 class HomePage extends StatefulWidget {
@@ -51,7 +50,7 @@ class _HomePageState extends State<HomePage> {
     _userId = _client.auth.currentUser?.id;
     _loadBalance();
   }
-
+}
   Future<void> _loadBalance() async {
     if (_userId == null) return;
     final b = await _pointsService.getBalance(_userId!);
