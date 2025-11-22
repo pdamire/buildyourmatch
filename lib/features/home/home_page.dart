@@ -137,7 +137,7 @@ class _HomePageState extends State<HomePage> {
                         child: ListTile(
                           leading: const Icon(Icons.favorite),
                           title: Text(c.title),
-                          subtitle: Text(c.prompt),
+                          subtitle: Text(c.promptText),
                           trailing:
                               const Icon(Icons.chevron_right, color: Colors.pink),
                           onTap: () => context.push('/challenge', extra: c),
