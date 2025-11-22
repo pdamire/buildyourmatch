@@ -1,4 +1,5 @@
-import 'points_service.dart';
+// lib/services/points_service.dart
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PointsService {
@@ -28,7 +29,7 @@ class PointsService {
     return (res['balance'] as int?) ?? 0;
   }
 
-  /// Internal helper used by awardPoints and spendPoints.
+  /// Internal helper used by [awardPoints] and [spendPoints].
   ///
   /// 1) Insert a row into `points_transactions`
   /// 2) Call the `adjust_user_points` RPC in Supabase
@@ -48,12 +49,13 @@ class PointsService {
     });
 
     // Call the RPC to adjust the balance
-    final res = await client
-        .rpc('adjust_user_points', params: {
-          'p_user_id': userId,
-          'p_amount': amount,
-        })
-        .single();
+    final res = await client.rpc(
+      'adjust_user_points',
+      params: {
+        'p_user_id': userId,
+        'p_amount': amount,
+      },
+    ).single();
 
     return res['new_balance'] as int;
   }

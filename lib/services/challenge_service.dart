@@ -1,5 +1,7 @@
-import 'challenge_service.dart';
+// lib/services/challenge_service.dart
+
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import 'points_service.dart';
 
 class ChallengeService {
@@ -11,23 +13,22 @@ class ChallengeService {
   // DAILY LIMIT: max 20 answers per day per user
   static const int dailyQuestionLimit = 20;
 
+  // -------------------------------------------------------------
+  // INTERNAL: how many answers this user has given today
+  // -------------------------------------------------------------
   Future<int> _getTodayAnswerCount(String userId) async {
     final today = DateTime.now().toUtc().toIso8601String().substring(0, 10);
 
-    ffinal res = await client
-    .from('user_answers')
-    .select('id')          // ✅ just one argument
-    .eq('user_id', userId)
-    .gte('created_at', '$today 00:00:00+00')
-    .lte('created_at', '$today 23:59:59+00');
+    final res = await client
+        .from('user_answers')
+        .select('id')
+        .eq('user_id', userId)
+        .gte('created_at', '$today 00:00:00+00')
+        .lte('created_at', '$today 23:59:59+00');
 
-final List list = res as List;
-return list.length;
-
-    // Supabase count lives in response.count in Dart client, but here
-    // we can just use length as an approximation if count is null.
-    final list = res as List;
-    return list.length;
+    // Use a clearly-named variable (NOT "list") to avoid duplicates.
+    final List<dynamic> rows = res as List<dynamic>;
+    return rows.length;
   }
 
   Future<void> _ensureCanAnswer(String userId) async {
@@ -39,7 +40,9 @@ return list.length;
     }
   }
 
+  // -------------------------------------------------------------
   // OPEN / WRITTEN QUESTIONS (10 pts)
+  // -------------------------------------------------------------
   Future<void> completeOpenQuestion({
     required String userId,
     required int questionId,
@@ -61,7 +64,9 @@ return list.length;
     );
   }
 
+  // -------------------------------------------------------------
   // MULTIPLE CHOICE (8 pts)
+  // -------------------------------------------------------------
   Future<void> completeMultipleChoice({
     required String userId,
     required int questionId,
@@ -83,43 +88,49 @@ return list.length;
     );
   }
 
+  // -------------------------------------------------------------
   // TODAY'S STANDARD CHALLENGES (non-crossword)
-  Future<List<Map<String, dynamic>>> getTodayChallenges(String userId) async {
+  // -------------------------------------------------------------
+  Future<List<Map<String, dynamic>>> getTodayChallenges(
+    String userId,
+  ) async {
+    // IDs this user has already answered
     final answered = await client
         .from('user_answers')
         .select('question_id')
         .eq('user_id', userId);
 
-    final answeredIds = (answered as List)
+    final answeredIds = (answered as List<dynamic>)
         .map((e) => e['question_id'] as int)
         .toList(growable: false);
 
-    // Fetch a bigger batch, we’ll filter in Dart.
-final raw = await client
-    .from('questions')
-    .select()
-    .neq('type', 'crossword')
-    .limit(100); // any number >= 20 is fine
+    // Fetch a bigger batch, then filter in Dart
+    final raw = await client
+        .from('questions')
+        .select()
+        .neq('type', 'crossword')
+        .limit(100); // any number >= 20 is fine
 
-final all = List<Map<String, dynamic>>.from(raw as List);
+    final all =
+        List<Map<String, dynamic>>.from(raw as List<dynamic>);
 
-List<Map<String, dynamic>> filtered;
-if (answeredIds.isEmpty) {
-  filtered = all;
-} else {
-  filtered = all
-      .where((row) => !answeredIds.contains(row['id'] as int))
-      .toList();
-}
+    List<Map<String, dynamic>> filtered;
+    if (answeredIds.isEmpty) {
+      filtered = all;
+    } else {
+      filtered = all
+          .where((row) => !answeredIds.contains(row['id'] as int))
+          .toList();
+    }
 
-// If your original code only wanted 20, keep that:
-filtered = filtered.take(20).toList();
+    // Only keep up to 20 for today
+    filtered = filtered.take(20).toList();
+    return filtered;
+  }
 
-return filtered;
-
-
-  // ---------- CROSSWORD SUPPORT ----------
-
+  // -------------------------------------------------------------
+  // CROSSWORD SUPPORT
+  // -------------------------------------------------------------
   Future<Map<String, dynamic>?> getTodayCrossword() async {
     final today = DateTime.now().toUtc().toIso8601String().substring(0, 10);
 
@@ -139,7 +150,7 @@ return filtered;
 
     return {
       'puzzle': puzzle,
-      'clues': List<Map<String, dynamic>>.from(clues as List),
+      'clues': List<Map<String, dynamic>>.from(clues as List<dynamic>),
     };
   }
 
@@ -158,22 +169,31 @@ return filtered;
         .select('id, answer')
         .eq('crossword_id', crosswordId);
 
-    final clues = List<Map<String, dynamic>>.from(res as List);
+    final clues =
+        List<Map<String, dynamic>>.from(res as List<dynamic>);
 
     int correctCount = 0;
 
     for (final clue in clues) {
       final id = clue['id'] as int;
-      final correct = (clue['answer'] as String).trim().toUpperCase();
-      final userAnswer = (answers[id] ?? '').trim().toUpperCase();
+      final correct =
+          (clue['answer'] as String).trim().toUpperCase();
+      final userAnswer =
+          (answers[id] ?? '').trim().toUpperCase();
+
       if (userAnswer.isNotEmpty && userAnswer == correct) {
         correctCount++;
       }
+    }
 
-      // Store each answer attempt
+    // Store each answer attempt
+    for (final clue in clues) {
+      final id = clue['id'] as int;
+      final userAnswer = (answers[id] ?? '').trim();
+
       await client.from('user_answers').insert({
         'user_id': userId,
-        'question_id': id, // reuse id as 'question' id for crossword clues
+        'question_id': id, // reuse id as "question" id for crossword clues
         'answer_text': userAnswer,
       });
     }
