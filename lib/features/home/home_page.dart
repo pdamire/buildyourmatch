@@ -9,7 +9,7 @@ import '../../services/points_service.dart';
 import '../../services/daily_dice_service.dart';
 import '../../services/challenge_service.dart';
 import '../../services/match_service.dart';
-import '../models/challenge.dart';
+import '../../models/challenge.dart';
 import '../progress/widgets/gm_progress_ring.dart';
 
 class HomePage extends StatefulWidget {
