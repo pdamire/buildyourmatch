@@ -9,7 +9,7 @@ import '../../services/points_service.dart';
 import '../../services/daily_dice_service.dart';
 import '../../services/challenge_service.dart';
 import '../../services/match_service.dart';
-import '../../models/challenge.dart';
+import '../models/challenge.dart';
 import '../progress/widgets/gm_progress_ring.dart';
 
 class HomePage extends StatefulWidget {
@@ -29,6 +29,7 @@ class _HomePageState extends State<HomePage> {
   String? _userId;
   int? _balance;
 
+  /// Today’s challenges future
   late Future<List<Challenge>> fut;
 
   @override
@@ -44,19 +45,19 @@ class _HomePageState extends State<HomePage> {
     _challengeService = ChallengeService(_client, _pointsService);
     _matchService = MatchService(_client);
 
-    // Load daily challenges
+    // Load today’s challenges
     fut = _challengeService.today();
 
     // Load balance
     _userId = _client.auth.currentUser?.id;
     _loadBalance();
   }
-}
+
   Future<void> _loadBalance() async {
     if (_userId == null) return;
     final b = await _pointsService.getBalance(_userId!);
     if (!mounted) return;
-    setState(() => _balance = b);
+    setState(() => _balance = b); // ✅ CORRECT: setState, not setStateO
   }
 
   @override
@@ -84,7 +85,7 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  const GmProgressRing(value: .3),
+                  const GmProgressRing(value: 0.3),
                   const SizedBox(width: 16),
                   Expanded(
                     child: Column(
@@ -112,6 +113,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
+          // Daily dice
           const DailyDiceCard(),
 
           const Padding(
@@ -132,20 +134,17 @@ class _HomePageState extends State<HomePage> {
               final items = snap.data ?? [];
 
               return Column(
-                children: items
-                    .map(
-                      (c) => Card(
-                        child: ListTile(
-                          leading: const Icon(Icons.favorite),
-                          title: Text(c.title),
-                          subtitle: Text(c.promptText),
-                          trailing:
-                              const Icon(Icons.chevron_right, color: Colors.pink),
-                          onTap: () => context.push('/challenge', extra: c),
-                        ),
-                      ),
-                    )
-                    .toList(),
+                children: items.map((c) {
+                  return Card(
+                    child: ListTile(
+                      leading: const Icon(Icons.favorite),
+                      title: Text(c.title),
+                      subtitle: Text(c.promptText),
+                      trailing: const Icon(Icons.chevron_right, color: Colors.pink),
+                      onTap: () => context.push('/challenge', extra: c),
+                    ),
+                  );
+                }).toList(),
               );
             },
           ),
@@ -153,7 +152,6 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 24),
         ],
       ),
-
       bottomNavigationBar: NavigationBar(
         selectedIndex: 0,
         onDestinationSelected: (i) {
