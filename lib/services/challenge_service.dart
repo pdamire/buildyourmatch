@@ -1,7 +1,6 @@
 // lib/services/challenge_service.dart
 
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'points_service.dart';
 
 class ChallengeService {
@@ -26,7 +25,6 @@ class ChallengeService {
         .gte('created_at', '$today 00:00:00+00')
         .lte('created_at', '$today 23:59:59+00');
 
-    // Use a clearly-named variable (NOT "list") to avoid duplicates.
     final List<dynamic> rows = res as List<dynamic>;
     return rows.length;
   }
