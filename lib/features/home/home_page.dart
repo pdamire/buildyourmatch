@@ -1,3 +1,4 @@
+import '../../models/challenge.dart';
 import 'daily_dice_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +10,7 @@ import '../../services/points_service.dart';
 import '../../services/daily_dice_service.dart';
 import '../../services/challenge_service.dart';
 import '../../services/match_service.dart';
-import '../../models/challenge.dart';
+import '../models/challenge.dart';
 import '../progress/widgets/gm_progress_ring.dart';
 
 class HomePage extends StatefulWidget {
@@ -46,7 +47,7 @@ class _HomePageState extends State<HomePage> {
     _matchService = MatchService(_client);
 
     // Load today’s challenges
-    fut = _challengeService.today();
+    fut = _challengeService.fetchDailyChallenges();
 
     // Load balance
     _userId = _client.auth.currentUser?.id;
@@ -57,7 +58,7 @@ class _HomePageState extends State<HomePage> {
     if (_userId == null) return;
     final b = await _pointsService.getBalance(_userId!);
     if (!mounted) return;
-    setState(() => _balance = b); // ✅ CORRECT: setState, not setStateO
+    setState(() => _balance = b); 
   }
 
   @override
