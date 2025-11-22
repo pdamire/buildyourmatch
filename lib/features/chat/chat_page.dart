@@ -144,7 +144,7 @@ class _ChatPageState extends State<ChatPage> {
       await _client
           .from('conversations')
           .update({'video_unlocked': true})
-          .eq('id', widget.conversationId);
+          .eq('id', widget.conversationId!);
 
       if (!mounted) return;
 
