@@ -13,14 +13,14 @@ workflows:
           flutter pub get
 
       - name: Build IPA with automatic code signing
-  script: |
-    xcode-project use-profiles
-    xcode-project build-ipa \
-      --workspace="ios/Runner.xcworkspace" \
-      --scheme="Runner" \
-      --dart-define=SUPABASE_URL=$SUPABASE_URL \
-      --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
-      --dart-define=RC_PUBLIC_SDK_KEY=$RC_PUBLIC_SDK_KEY
+        script: |
+          xcode-project use-profiles
+          xcode-project build-ipa \
+            --workspace="ios/Runner.xcworkspace" \
+            --scheme="Runner" \
+            --dart-define=SUPABASE_URL=$SUPABASE_URL \
+            --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+            --dart-define=RC_PUBLIC_SDK_KEY=$RC_PUBLIC_SDK_KEY
 
     artifacts:
       - build/ios/ipa/*.ipa
