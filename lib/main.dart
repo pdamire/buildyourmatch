@@ -16,6 +16,11 @@ import 'features/chat/chat_page.dart';
 import 'features/store/points_store.dart';
 import 'features/admin/admin_page.dart';
 import 'models/challenge.dart';
+import 'package:buildyourmatch_final_starter_2/services/points_service.dart';
+import 'package:buildyourmatch_final_starter_2/services/daily_dice_service.dart';
+import 'package:buildyourmatch_final_starter_2/services/challenge_service.dart';
+import 'package:buildyourmatch_final_starter_2/services/match_service.dart';
+import 'user_bootstrap.dart';
 // These read from Codemagic Environment Variables
 const rcPublicSdkKeyIOS = String.fromEnvironment('RC_PUBLIC_SDK_KEY');
 const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
@@ -47,10 +52,14 @@ void main() async {
     anonKey: supabaseAnonKey,
   );
 
-  // 2. Initialize RevenueCat using the environment key
-  await RevenueCatPurchase.setup(rcPublicSdkKeyIOS);
+  // 2. Initialize your user in the database
+  final client = Supabase.instance.client;
+  await UserBootstrapService(client).ensureUserInitialized();
 
-  // 3. Launch the app
+  // 3. Initialize RevenueCat using the environment key
+  await RevenueCatPurchase.setup(rcPubLicSdkKeyIOS);
+
+  // 4. Launch the app
   runApp(const BYMApp());
 }
 

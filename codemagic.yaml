@@ -8,23 +8,19 @@ workflows:
         - appstore
 
     scripts:
-      - name: Force clear cache
-        script: |
-          rm -rf $CM_BUILD_DIR/.pub-cache
-          rm -rf $CM_BUILD_DIR/ios/Pods
-          rm -rf $CM_BUILD_DIR/build
-
-      - name: Get Flutter dependencies
+      - name: Get Flutter packages
         script: |
           flutter pub get
 
-      - name: Fix asset validation skip
-        script: |
-          echo "ALLOW_MISSING_ICONS=true" >> $CM_ENV
-
-      - name: Build iOS IPA
-        script: |
-          flutter build ipa --release
+      - name: Build IPA with automatic code signing
+  script: |
+    xcode-project use-profiles
+    xcode-project build-ipa \
+      --workspace="ios/Runner.xcworkspace" \
+      --scheme="Runner" \
+      --dart-define=SUPABASE_URL=$SUPABASE_URL \
+      --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
+      --dart-define=RC_PUBLIC_SDK_KEY=$RC_PUBLIC_SDK_KEY
 
     artifacts:
       - build/ios/ipa/*.ipa
@@ -34,5 +30,5 @@ workflows:
         api_key: $APP_STORE_CONNECT_PRIVATE_KEY
         key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_testflight: true
         submit_to_app_store: false
+        submit_to_testflight: true

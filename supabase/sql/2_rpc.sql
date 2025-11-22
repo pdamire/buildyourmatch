@@ -81,3 +81,22 @@ begin
   update public.daily_checkins set rolls = current_rolls + 1, last_roll_at = now() where user_id = uid and date = today;
   return gained;
 end; $$;
+-- ATOMICALLY ADJUST USER POINTS BALANCE
+create or replace function public.adjust_user_points(
+  p_user_id uuid,
+  p_amount integer
+)
+returns table (new_balance integer)
+language plpgsql
+as $$
+begin
+  insert into public.user_points (user_id, balance)
+  values (p_user_id, p_amount)
+  on conflict (user_id)
+  do update set balance = public.user_points.balance + excluded.balance,
+               updated_at = now()
+  returning balance into new_balance;
+
+  return;
+end;
+$$;

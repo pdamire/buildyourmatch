@@ -71,3 +71,63 @@ alter table public.daily_checkins enable row level security;
 create policy "self read" on public.daily_checkins for select using (auth.uid() = user_id);
 create policy "self insert" on public.daily_checkins for insert with check (auth.uid() = user_id);
 create policy "self update" on public.daily_checkins for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+-- POINTS BALANCE PER USER
+create table if not exists public.user_points (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  balance integer not null default 0,
+  updated_at timestamptz not null default now()
+);
+
+-- POINTS TRANSACTION LOG
+create table if not exists public.points_transactions (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  amount integer not null,
+  reason text not null,
+  meta jsonb default '{}'::jsonb,
+  created_at timestamptz not null default now()
+);
+
+-- DAILY DICE ROLLS
+create table if not exists public.daily_dice (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  date date not null,
+  rolls_used integer not null default 0,
+  unique (user_id, date)
+);
+
+-- QUESTIONS TABLE (IF YOU DON'T ALREADY HAVE ONE)
+create table if not exists public.questions (
+  id bigserial primary key,
+  text text not null,
+  type text not null default 'open',       -- open, mcq, fill_blank, puzzle
+  depth_level text not null default 'light', -- light, medium, deep
+  category text default 'general'
+);
+
+-- USER ANSWERS
+create table if not exists public.user_answers (
+  id bigserial primary key,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  question_id bigint not null references public.questions(id) on delete cascade,
+  answer_text text not null,
+  created_at timestamptz not null default now()
+);
+-- SIMPLE DAILY RELATIONSHIP CROSSWORD
+create table if not exists public.relationship_crosswords (
+  id bigserial primary key,
+  puzzle_date date not null,
+  title text not null,
+  created_at timestamptz not null default now()
+);
+
+create table if not exists public.relationship_crossword_clues (
+  id bigserial primary key,
+  crossword_id bigint not null references public.relationship_crosswords(id) on delete cascade,
+  clue_number integer not null,
+  clue_text text not null,
+  answer text not null, -- store uppercase, no spaces
+  created_at timestamptz not null default now()
+);
