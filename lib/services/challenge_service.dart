@@ -97,7 +97,7 @@ class ChallengeService {
         .limit(20);
 
    if (answeredIds.isNotEmpty) {
-  query = query.filter('id', 'not.in', answeredIds);
+  query = query.filter('id', 'notin', answeredIds);
 }
 
 
