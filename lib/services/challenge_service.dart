@@ -1,3 +1,4 @@
+import 'challenge_service.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'points_service.dart';
 
@@ -93,21 +94,29 @@ return list.length;
         .map((e) => e['question_id'] as int)
         .toList(growable: false);
 
-    var query = client
-        .from('questions')
-        .select()
-        .neq('type', 'crossword') // keep crossword separate
-        .limit(20);
+    // Fetch a bigger batch, we’ll filter in Dart.
+final raw = await client
+    .from('questions')
+    .select()
+    .neq('type', 'crossword')
+    .limit(100); // any number >= 20 is fine
 
-   if (answeredIds.isNotEmpty) {
-  query = query.not('id', 'in', answeredIds);  // ✅ correct NOT IN usage
+final all = List<Map<String, dynamic>>.from(raw as List);
+
+List<Map<String, dynamic>> filtered;
+if (answeredIds.isEmpty) {
+  filtered = all;
+} else {
+  filtered = all
+      .where((row) => !answeredIds.contains(row['id'] as int))
+      .toList();
 }
 
+// If your original code only wanted 20, keep that:
+filtered = filtered.take(20).toList();
 
+return filtered;
 
-    final res = await query;
-    return List<Map<String, dynamic>>.from(res as List);
-  }
 
   // ---------- CROSSWORD SUPPORT ----------
 

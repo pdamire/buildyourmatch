@@ -1,3 +1,4 @@
+import 'challenge_page.dart';
 import 'package:buildyourmatch_final_starter_2/services/challenge_service.dart';
 import 'package:buildyourmatch_final_starter_2/services/points_service.dart';
 import 'package:flutter/material.dart';

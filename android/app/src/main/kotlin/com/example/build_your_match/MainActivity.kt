@@ -1,4 +1,4 @@
-package com.example.build_your_match
+package com.example.buildyourmatch
 
 import io.flutter.embedding.android.FlutterActivity
 

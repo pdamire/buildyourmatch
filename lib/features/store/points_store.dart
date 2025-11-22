@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:build_your_match/constants/points_costs.dart';
+import 'package:buildyourmatch/constants/points_costs.dart';
 
 class PointsStorePage extends StatelessWidget {
   const PointsStorePage({super.key});
