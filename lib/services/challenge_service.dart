@@ -13,12 +13,15 @@ class ChallengeService {
   Future<int> _getTodayAnswerCount(String userId) async {
     final today = DateTime.now().toUtc().toIso8601String().substring(0, 10);
 
-    final res = await client
-        .from('user_answers')
-        .select('id', const FetchOptions(count: CountOption.exact))
-        .eq('user_id', userId)
-        .gte('created_at', '$today 00:00:00+00')
-        .lte('created_at', '$today 23:59:59+00');
+    ffinal res = await client
+    .from('user_answers')
+    .select('id')          // ✅ just one argument
+    .eq('user_id', userId)
+    .gte('created_at', '$today 00:00:00+00')
+    .lte('created_at', '$today 23:59:59+00');
+
+final List list = res as List;
+return list.length;
 
     // Supabase count lives in response.count in Dart client, but here
     // we can just use length as an approximation if count is null.
@@ -97,8 +100,9 @@ class ChallengeService {
         .limit(20);
 
    if (answeredIds.isNotEmpty) {
-  query = query.filter('id', 'notin', answeredIds);
+  query = query.not('id', 'in', answeredIds);  // ✅ correct NOT IN usage
 }
+
 
 
     final res = await query;
