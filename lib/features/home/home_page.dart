@@ -1,3 +1,8 @@
+import 'dart:io';
+
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../models/challenge.dart';
 import 'daily_dice_card.dart';
 import 'package:flutter/material.dart';
@@ -211,9 +216,139 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  // Controllers
+  final TextEditingController _dobController = TextEditingController();
+
+  // Supabase
+  late final SupabaseClient _supabase;
+  String? _userId;
+
+  // Profile fields
+  List<String> selectedGenders = [];
+  List<String> selectedOrientations = [];
+  List<String> selectedRaces = [];
+  List<String> selectedEthnicities = [];
+  List<String> selectedLanguages = [];
+
+  // Image
+  String? _imageUrl;
+  bool _isUploading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _supabase = Supabase.instance.client;
+    _userId = _supabase.auth.currentUser?.id;
+  }
+
+  @override
+  void dispose() {
+    _dobController.dispose();
+    super.dispose();
+  }
+
+  // ---------------------
+  // AGE CALCULATOR
+  // ---------------------
+  int? _calculateAgeFromDobString(String dobText) {
+    try {
+      final dob = DateTime.parse(dobText.trim()); // expects YYYY-MM-DD
+      final now = DateTime.now();
+      int age = now.year - dob.year;
+
+      final hasHadBirthdayThisYear =
+          (now.month > dob.month) ||
+          (now.month == dob.month && now.day >= dob.day);
+
+      if (!hasHadBirthdayThisYear) {
+        age -= 1;
+      }
+
+      return age;
+    } catch (_) {
+      return null; // invalid format
+    }
+  }
+
+  // ---------------------
+  // IMAGE PICK + UPLOAD
+  // ---------------------
+  Future<void> _pickAndUploadImage() async {
+    try {
+      final image =
+          await ImagePicker().pickImage(source: ImageSource.gallery);
+
+      if (image == null) return;
+
+      setState(() => _isUploading = true);
+
+      final bytes = await image.readAsBytes();
+      final filePath = '${_userId}/profile.jpg';
+
+      // Upload to Supabase Storage bucket named: profile_images
+      await _supabase.storage.from('profile_images').uploadBinary(
+            filePath,
+            bytes,
+            fileOptions: const FileOptions(contentType: 'image/jpeg'),
+          );
+
+      final publicUrl =
+          _supabase.storage.from('profile_images').getPublicUrl(filePath);
+
+      setState(() {
+        _imageUrl = publicUrl;
+        _isUploading = false;
+      });
+    } catch (e) {
+      setState(() => _isUploading = false);
+      debugPrint('Upload error: $e');
+    }
+  }
+
+  // ---------------------
+  // SAVE PROFILE
+  // ---------------------
+  Future<void> _onSavePressed() async {
+    final dobText = _dobController.text.trim();
+    final age = _calculateAgeFromDobString(dobText);
+
+    // Reject under 21
+    if (age == null || age < 21) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content:
+              Text('You must be at least 21 years old to use Build Your Match.'),
+        ),
+      );
+      return;
+    }
+
+    await _supabase.from('users').update({
+      'dob': dobText,
+      'gender': selectedGenders,
+      'orientation': selectedOrientations,
+      'race': selectedRaces,
+      'ethnicity': selectedEthnicities,
+      'languages': selectedLanguages,
+      'profile_image': _imageUrl,
+    }).eq('id', _userId);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Profile saved!')),
+    );
+  }
+
+  // ---------------------
+  // UI
+  // ---------------------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -225,148 +360,110 @@ class ProfilePage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Basic Information',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // First name
-            const TextField(
-              decoration: InputDecoration(
-                labelText: 'First name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Last name
-            const TextField(
-              decoration: InputDecoration(
-                labelText: 'Last name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Date of birth (for now just a text field shell)
-            const TextField(
-              decoration: InputDecoration(
-                labelText: 'Date of birth (YYYY-MM-DD)',
-                border: OutlineInputBorder(),
+            // Photo
+            Center(
+              child: GestureDetector(
+                onTap: _pickAndUploadImage,
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.grey.shade300,
+                  backgroundImage:
+                      _imageUrl != null ? NetworkImage(_imageUrl!) : null,
+                  child: _imageUrl == null
+                      ? const Icon(Icons.camera_alt, size: 40)
+                      : null,
+                ),
               ),
             ),
             const SizedBox(height: 20),
 
+            // Basic Info
             const Text(
-              'Location',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
+              'Basic Information',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Name',
+                border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
 
-            const TextField(
-              decoration: InputDecoration(
+            // DOB
+            TextField(
+              controller: _dobController,
+              decoration: const InputDecoration(
+                labelText: 'Date of birth (YYYY-MM-DD)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            // Location
+            const Text(
+              'Location',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+
+            TextField(
+              decoration: const InputDecoration(
                 labelText: 'City',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
 
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              decoration: const InputDecoration(
                 labelText: 'Country',
                 border: OutlineInputBorder(),
               ),
             ),
+
             const SizedBox(height: 20),
 
+            // Languages
             const Text(
               'Languages you speak',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              '(We will later turn this into nice selectable chips.)',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
 
-            const TextField(
-              decoration: InputDecoration(
-                labelText: 'Languages (e.g. English, Farsi, Spanish)',
+            TextField(
+              decoration: const InputDecoration(
+                labelText: 'Languages (e.g., English, Farsi, Spanish)',
                 border: OutlineInputBorder(),
               ),
             ),
+
             const SizedBox(height: 20),
 
+            // Photo rules
             const Text(
-              'Photos (up to 6)',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
+              'Photo Rules:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
-
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: List.generate(6, (index) {
-                return Container(
-                  width: 90,
-                  height: 90,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.grey.shade400),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Photo ${index + 1}',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: 16),
-
             const Text(
-              'Photo rules:',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              '• No nude photos.\n'
-              '• No photos of other people Photoshopped as you.\n'
-              '• Photos must be clear and not blurry.\n'
-              '• No harmful, abusive, or illegal content.\n'
-              '• You must have the right to share these photos.',
+              '- No nude photos.\n'
+              '- No photos of other people Photoshopped as you.\n'
+              '- Photos must be clear and not blurry.\n'
+              '- No harmful, abusive, or illegal content.\n'
+              '- You must have the right to share these photos.',
               style: TextStyle(fontSize: 13),
             ),
+
             const SizedBox(height: 24),
 
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {
-                  // Later: save to Supabase
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Profile shell saved (not yet connected).'),
-                    ),
-                  );
-                },
+                onPressed: _onSavePressed,
                 child: const Text('Save Profile'),
               ),
             ),
@@ -376,4 +473,3 @@ class ProfilePage extends StatelessWidget {
     );
   }
 }
-
