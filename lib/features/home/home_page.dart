@@ -339,7 +339,7 @@ class _ProfilePageState extends State<ProfilePage> {
       'ethnicity': selectedEthnicities,
       'languages': selectedLanguages,
       'profile_image': _imageUrl,
-    }).eq('id', _userId);
+    }).eq('id', _userId!);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Profile saved!')),
