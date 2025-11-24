@@ -1,6 +1,4 @@
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -214,8 +212,6 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-  }
-}
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
