@@ -171,11 +171,12 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 24),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
+            bottomNavigationBar: NavigationBar(
         selectedIndex: 0,
         onDestinationSelected: (i) {
           switch (i) {
             case 0:
+              // Already on home
               break;
             case 1:
               context.push('/progress');
@@ -209,12 +210,13 @@ class _HomePageState extends State<HomePage> {
             selectedIcon: Icon(Icons.favorite),
             label: 'Match',
           ),
-
         ],
       ),
     );
   }
 }
+
+// --------------- PROFILE PAGE ----------------
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -255,9 +257,8 @@ class _ProfilePageState extends State<ProfilePage> {
     super.dispose();
   }
 
-  // ---------------------
-  // AGE CALCULATOR
-  // ---------------------
+  // ---------------- AGE CALCULATOR ----------------
+
   int? _calculateAgeFromDobString(String dobText) {
     try {
       final dob = DateTime.parse(dobText.trim()); // expects YYYY-MM-DD
@@ -278,12 +279,12 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // ---------------------
-  // IMAGE PICK + UPLOAD
-  // ---------------------
+  // ---------------- IMAGE PICK + UPLOAD ----------------
+
   Future<void> _pickAndUploadImage() async {
     try {
-      final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+      final image =
+          await ImagePicker().pickImage(source: ImageSource.gallery);
       if (image == null) return;
 
       setState(() => _isUploading = true);
@@ -293,12 +294,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
       // Upload to Supabase Storage bucket named: profile_images
       await _supabase.storage.from('profile_images').uploadBinary(
-            filePath,
-            bytes,
-            fileOptions: const FileOptions(contentType: 'image/jpeg'),
-          );
+        filePath,
+        bytes,
+        fileOptions: const FileOptions(contentType: 'image/jpeg'),
+      );
 
-      final publicUrl = _supabase.storage.from('profile_images').getPublicUrl(filePath);
+      final publicUrl =
+          _supabase.storage.from('profile_images').getPublicUrl(filePath);
 
       setState(() {
         _imageUrl = publicUrl;
@@ -310,9 +312,8 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  // ---------------------
-  // SAVE PROFILE
-  // ---------------------
+  // ---------------- SAVE PROFILE ----------------
+
   Future<void> _onSavePressed(BuildContext context) async {
     final dobText = _dobController.text.trim();
     final age = _calculateAgeFromDobString(dobText);
@@ -321,8 +322,16 @@ class _ProfilePageState extends State<ProfilePage> {
     if (age == null || age < 21) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content:
-              Text('You must be at least 21 years old to use Build Your Match.'),
+          content: Text('You must be at least 21 years old to use Build Your Match.'),
+        ),
+      );
+      return;
+    }
+
+    if (_userId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('User not logged in.'),
         ),
       );
       return;
@@ -336,16 +345,15 @@ class _ProfilePageState extends State<ProfilePage> {
       'ethnicity': selectedEthnicities,
       'languages': selectedLanguages,
       'profile_image': _imageUrl,
-    }).eq('id', _userId!);
+    }).eq('id', _userId);
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Profile saved!')),
     );
   }
 
-  // ---------------------
-  // UI
-  // ---------------------
+  // ---------------- UI ----------------
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -357,34 +365,33 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Photo
+            // IMAGE
             Center(
-              child: GestureDetector(
-                onTap: _pickAndUploadImage,
-                child: CircleAvatar(
-                  radius: 50,
-                  backgroundColor: Colors.grey.shade300,
-                  backgroundImage:
-                      _imageUrl != null ? NetworkImage(_imageUrl!) : null,
-                  child: _imageUrl == null
-                      ? const Icon(Icons.camera_alt, size: 40)
-                      : null,
-                ),
+              child: Column(
+                children: [
+                  CircleAvatar(
+                    radius: 48,
+                    backgroundImage:
+                        _imageUrl != null ? NetworkImage(_imageUrl!) : null,
+                    child: _imageUrl == null
+                        ? const Icon(Icons.person, size: 48)
+                        : null,
+                  ),
+                  const SizedBox(height: 12),
+                  ElevatedButton(
+                    onPressed: _isUploading ? null : _pickAndUploadImage,
+                    child: Text(_isUploading ? 'Uploading...' : 'Upload Photo'),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
 
-            // Basic Info
             const Text(
               'Basic Information',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-            ),
-            const SizedBox(height: 12),
-
-            TextField(
-              decoration: const InputDecoration(
-                labelText: 'Name',
-                border: OutlineInputBorder(),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
               ),
             ),
             const SizedBox(height: 12),
@@ -397,55 +404,62 @@ class _ProfilePageState extends State<ProfilePage> {
                 border: OutlineInputBorder(),
               ),
             ),
-
             const SizedBox(height: 20),
 
-            // Location
             const Text(
               'Location',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 12),
 
-            TextField(
-              decoration: const InputDecoration(
+            // We can later replace with real location fields
+            const TextField(
+              decoration: InputDecoration(
                 labelText: 'City',
                 border: OutlineInputBorder(),
               ),
             ),
             const SizedBox(height: 12),
-
-            TextField(
-              decoration: const InputDecoration(
+            const TextField(
+              decoration: InputDecoration(
                 labelText: 'Country',
                 border: OutlineInputBorder(),
               ),
             ),
-
             const SizedBox(height: 20),
 
-            // Languages
             const Text(
               'Languages you speak',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '(We will later turn this into nice selectable chips.)',
+              style: TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 12),
 
-            TextField(
-              decoration: const InputDecoration(
-                labelText: 'Languages (e.g., English, Farsi, Spanish)',
+            const TextField(
+              decoration: InputDecoration(
+                labelText: 'Languages (e.g. English, Farsi, Spanish)',
                 border: OutlineInputBorder(),
               ),
             ),
-
             const SizedBox(height: 20),
 
-            // Photo rules
             const Text(
-              'Photo Rules:',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+              'Photo rules:',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+              ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 4),
             const Text(
               '- No nude photos.\n'
               '- No photos of other people Photoshopped as you.\n'
@@ -454,7 +468,6 @@ class _ProfilePageState extends State<ProfilePage> {
               '- You must have the right to share these photos.',
               style: TextStyle(fontSize: 13),
             ),
-
             const SizedBox(height: 24),
 
             SizedBox(
