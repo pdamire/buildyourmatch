@@ -212,7 +212,6 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
     );
-
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
@@ -220,7 +219,7 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends State<ProfilePage> 
   // Controllers
   final TextEditingController _dobController = TextEditingController();
 
