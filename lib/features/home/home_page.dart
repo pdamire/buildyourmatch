@@ -209,7 +209,7 @@ class _HomePageState extends State<HomePage> {
             selectedIcon: Icon(Icons.favorite),
             label: 'Match',
           ),
-          
+
         ],
       ),
     );
@@ -316,7 +316,7 @@ class _ProfilePageState extends State<ProfilePage>
   // ---------------------
   // SAVE PROFILE
   // ---------------------
-  Future<void> _onSavePressed() async {
+  Future<void> _onSavePressed(BuildContext context) async {
     final dobText = _dobController.text.trim();
     final age = _calculateAgeFromDobString(dobText);
 
@@ -463,7 +463,7 @@ class _ProfilePageState extends State<ProfilePage>
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _onSavePressed,
+                onPressed: () => _onSavePressed(context),
                 child: const Text('Save Profile'),
               ),
             ),
