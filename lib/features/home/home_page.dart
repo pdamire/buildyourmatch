@@ -223,7 +223,7 @@ class ProfilePage extends StatefulWidget {
   State<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> 
+class _ProfilePageState extends State<ProfilePage> {
   // Controllers
   final TextEditingController _dobController = TextEditingController();
 
@@ -283,9 +283,7 @@ class _ProfilePageState extends State<ProfilePage>
   // ---------------------
   Future<void> _pickAndUploadImage() async {
     try {
-      final image =
-          await ImagePicker().pickImage(source: ImageSource.gallery);
-
+      final image = await ImagePicker().pickImage(source: ImageSource.gallery);
       if (image == null) return;
 
       setState(() => _isUploading = true);
@@ -300,8 +298,7 @@ class _ProfilePageState extends State<ProfilePage>
             fileOptions: const FileOptions(contentType: 'image/jpeg'),
           );
 
-      final publicUrl =
-          _supabase.storage.from('profile_images').getPublicUrl(filePath);
+      final publicUrl = _supabase.storage.from('profile_images').getPublicUrl(filePath);
 
       setState(() {
         _imageUrl = publicUrl;
