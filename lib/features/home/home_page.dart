@@ -209,9 +209,13 @@ class _HomePageState extends State<HomePage> {
             selectedIcon: Icon(Icons.favorite),
             label: 'Match',
           ),
+          
         ],
       ),
     );
+  }
+}
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
 
