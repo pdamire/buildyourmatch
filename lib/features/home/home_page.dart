@@ -1,21 +1,19 @@
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/challenge.dart';
-import 'daily_dice_card.dart';
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
-
 import '../../theme.dart';
-import '../../data/supabase_client.dart';
-import '../../auth/auth_gate.dart';
 import '../../services/points_service.dart';
 import '../../services/daily_dice_service.dart';
 import '../../services/challenge_service.dart';
 import '../../services/match_service.dart';
-import '../models/challenge.dart';
 import '../progress/widgets/gm_progress_ring.dart';
+import 'daily_dice_card.dart';
+
+// 👇 import the new ProfilePage file we created earlier.
+// If your path is different, adjust to wherever profile_page.dart lives.
+import '../profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -62,33 +60,34 @@ class _HomePageState extends State<HomePage> {
     if (_userId == null) return;
     final b = await _pointsService.getBalance(_userId!);
     if (!mounted) return;
-    setState(() => _balance = b); 
+    setState(() => _balance = b);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-  title: const Text('Build Your Match'),
-  actions: [
-    IconButton(
-      icon: const Icon(Icons.person),
-      tooltip: 'Profile',
-      onPressed: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const ProfilePage(),
+        title: const Text('Build Your Match'),
+        actions: [
+          // Profile button
+          IconButton(
+            icon: const Icon(Icons.person),
+            tooltip: 'Profile',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProfilePage(),
+                ),
+              );
+            },
           ),
-        );
-      },
-    ),
-  ],
-),
+          // Store / points page
           IconButton(
             onPressed: () => context.push('/store'),
             icon: const Icon(Icons.bolt),
           ),
+          // Admin page (optional)
           IconButton(
             onPressed: () => context.push('/admin'),
             icon: const Icon(Icons.admin_panel_settings),
@@ -116,6 +115,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 6),
                         Text(
+                          // You can later wire this to _balance, streaks, etc.
                           'Streak: 3 days   XP: 75',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
@@ -132,7 +132,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // Daily dice
+          // Daily dice card
           const DailyDiceCard(),
 
           const Padding(
@@ -150,7 +150,23 @@ class _HomePageState extends State<HomePage> {
           FutureBuilder<List<Challenge>>(
             future: fut,
             builder: (context, snap) {
+              if (snap.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+
               final items = snap.data ?? [];
+
+              if (items.isEmpty) {
+                return const Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Text('No challenges for today yet.'),
+                );
+              }
 
               return Column(
                 children: items.map((c) {
@@ -159,7 +175,10 @@ class _HomePageState extends State<HomePage> {
                       leading: const Icon(Icons.favorite),
                       title: Text(c.title),
                       subtitle: Text(c.promptText),
-                      trailing: const Icon(Icons.chevron_right, color: Colors.pink),
+                      trailing: const Icon(
+                        Icons.chevron_right,
+                        color: Colors.pink,
+                      ),
                       onTap: () => context.push('/challenge', extra: c),
                     ),
                   );
@@ -171,7 +190,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 24),
         ],
       ),
-            bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: NavigationBar(
         selectedIndex: 0,
         onDestinationSelected: (i) {
           switch (i) {
@@ -211,274 +230,6 @@ class _HomePageState extends State<HomePage> {
             label: 'Match',
           ),
         ],
-      ),
-    );
-  }
-}
-
-// --------------- PROFILE PAGE ----------------
-
-class ProfilePage extends StatefulWidget {
-  const ProfilePage({super.key});
-
-  @override
-  State<ProfilePage> createState() => _ProfilePageState();
-}
-
-class _ProfilePageState extends State<ProfilePage> {
-  // Controllers
-  final TextEditingController _dobController = TextEditingController();
-
-  // Supabase
-  late final SupabaseClient _supabase;
-  String? _userId;
-
-  // Profile fields
-  List<String> selectedGenders = [];
-  List<String> selectedOrientations = [];
-  List<String> selectedRaces = [];
-  List<String> selectedEthnicities = [];
-  List<String> selectedLanguages = [];
-
-  // Image
-  String? _imageUrl;
-  bool _isUploading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _supabase = Supabase.instance.client;
-    _userId = _supabase.auth.currentUser?.id;
-  }
-
-  @override
-  void dispose() {
-    _dobController.dispose();
-    super.dispose();
-  }
-
-  // ---------------- AGE CALCULATOR ----------------
-
-  int? _calculateAgeFromDobString(String dobText) {
-    try {
-      final dob = DateTime.parse(dobText.trim()); // expects YYYY-MM-DD
-      final now = DateTime.now();
-      int age = now.year - dob.year;
-
-      final hasHadBirthdayThisYear =
-          (now.month > dob.month) ||
-          (now.month == dob.month && now.day >= dob.day);
-
-      if (!hasHadBirthdayThisYear) {
-        age -= 1;
-      }
-
-      return age;
-    } catch (_) {
-      return null; // invalid format
-    }
-  }
-
-  // ---------------- IMAGE PICK + UPLOAD ----------------
-
-  Future<void> _pickAndUploadImage() async {
-    try {
-      final image =
-          await ImagePicker().pickImage(source: ImageSource.gallery);
-      if (image == null) return;
-
-      setState(() => _isUploading = true);
-
-      final bytes = await image.readAsBytes();
-      final filePath = '${_userId}/profile.jpg';
-
-      // Upload to Supabase Storage bucket named: profile_images
-      await _supabase.storage.from('profile_images').uploadBinary(
-        filePath,
-        bytes,
-        fileOptions: const FileOptions(contentType: 'image/jpeg'),
-      );
-
-      final publicUrl =
-          _supabase.storage.from('profile_images').getPublicUrl(filePath);
-
-      setState(() {
-        _imageUrl = publicUrl;
-        _isUploading = false;
-      });
-    } catch (e) {
-      setState(() => _isUploading = false);
-      debugPrint('Upload error: $e');
-    }
-  }
-
-  // ---------------- SAVE PROFILE ----------------
-
-  Future<void> _onSavePressed(BuildContext context) async {
-    final dobText = _dobController.text.trim();
-    final age = _calculateAgeFromDobString(dobText);
-
-    // Reject under 21
-    if (age == null || age < 21) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('You must be at least 21 years old to use Build Your Match.'),
-        ),
-      );
-      return;
-    }
-
-    if (_userId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('User not logged in.'),
-        ),
-      );
-      return;
-    }
-
-    await _supabase.from('users').update({
-      'dob': dobText,
-      'gender': selectedGenders,
-      'orientation': selectedOrientations,
-      'race': selectedRaces,
-      'ethnicity': selectedEthnicities,
-      'languages': selectedLanguages,
-      'profile_image': _imageUrl,
-    }).eq('id', _userId);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Profile saved!')),
-    );
-  }
-
-  // ---------------- UI ----------------
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Your Profile'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // IMAGE
-            Center(
-              child: Column(
-                children: [
-                  CircleAvatar(
-                    radius: 48,
-                    backgroundImage:
-                        _imageUrl != null ? NetworkImage(_imageUrl!) : null,
-                    child: _imageUrl == null
-                        ? const Icon(Icons.person, size: 48)
-                        : null,
-                  ),
-                  const SizedBox(height: 12),
-                  ElevatedButton(
-                    onPressed: _isUploading ? null : _pickAndUploadImage,
-                    child: Text(_isUploading ? 'Uploading...' : 'Upload Photo'),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            const Text(
-              'Basic Information',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // DOB
-            TextField(
-              controller: _dobController,
-              decoration: const InputDecoration(
-                labelText: 'Date of birth (YYYY-MM-DD)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            const Text(
-              'Location',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // We can later replace with real location fields
-            const TextField(
-              decoration: InputDecoration(
-                labelText: 'City',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 12),
-            const TextField(
-              decoration: InputDecoration(
-                labelText: 'Country',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            const Text(
-              'Languages you speak',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              '(We will later turn this into nice selectable chips.)',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-            const SizedBox(height: 12),
-
-            const TextField(
-              decoration: InputDecoration(
-                labelText: 'Languages (e.g. English, Farsi, Spanish)',
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            const Text(
-              'Photo rules:',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 4),
-            const Text(
-              '- No nude photos.\n'
-              '- No photos of other people Photoshopped as you.\n'
-              '- Photos must be clear and not blurry.\n'
-              '- No harmful, abusive, or illegal content.\n'
-              '- You must have the right to share these photos.',
-              style: TextStyle(fontSize: 13),
-            ),
-            const SizedBox(height: 24),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () => _onSavePressed(context),
-                child: const Text('Save Profile'),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
