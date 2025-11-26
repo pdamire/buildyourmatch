@@ -54,7 +54,7 @@ void main() async {
 
   // 2. Initialize your user in the database
   final client = Supabase.instance.client;
-  await UserBootstrapService(client).ensureUserInitialized();
+  // await UserBootstrapService(client).ensureUserInitialized();
 
   // 3. Initialize RevenueCat using the environment key
   await RevenueCatPurchase.setup(rcPubLicSdkKeyIOS);
