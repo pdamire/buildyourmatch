@@ -1,7 +1,7 @@
 name: build_your_match
 description: Build Your Match — Grow first, then meet.
 publish_to: "none"
-version: 1.0.1+2
+version: 1.0.1+3
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
