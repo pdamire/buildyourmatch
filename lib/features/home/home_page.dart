@@ -60,7 +60,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('BYM – SUPER TEST HOME'),
+        title: const Text('TESTING 123 - NEW BUILD'),
         actions: [
           // Profile button
           IconButton(
