@@ -4,23 +4,14 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/challenge.dart';
 import '../../theme.dart';
-
-// ⬇ Correct relative imports for services
 import '../../services/points_service.dart';
 import '../../services/daily_dice_service.dart';
 import '../../services/challenge_service.dart';
 import '../../services/match_service.dart';
-
 import '../progress/widgets/gm_progress_ring.dart';
 import 'daily_dice_card.dart';
+import '../../pages/profile_page.dart'; 
 
-// ⬇ Import your ProfilePage correctly
-import '../profile_page.dart';
-
-
-// 👇 import the new ProfilePage file we created earlier.
-// If your path is different, adjust to wherever profile_page.dart lives.
-import '../profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});

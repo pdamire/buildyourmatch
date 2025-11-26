@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:buildyourmatch_final_starter_2/services/points_service.dart';
+import '../../services/points_service.dart';
 import 'package:buildyourmatch_final_starter_2/services/challenge_service.dart';
 
 class CrosswordScreen extends StatefulWidget {

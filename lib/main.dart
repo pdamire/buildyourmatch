@@ -16,10 +16,10 @@ import 'features/chat/chat_page.dart';
 import 'features/store/points_store.dart';
 import 'features/admin/admin_page.dart';
 import 'models/challenge.dart';
-import 'package:buildyourmatch_final_starter_2/services/points_service.dart';
-import 'package:buildyourmatch_final_starter_2/services/daily_dice_service.dart';
-import 'package:buildyourmatch_final_starter_2/services/challenge_service.dart';
-import 'package:buildyourmatch_final_starter_2/services/match_service.dart';
+import 'services/points_service.dart';
+import 'services/daily_dice_service.dart';
+import 'services/challenge_service.dart';
+import 'services/match_service.dart';
 import 'user_bootstrap.dart';
 // These read from Codemagic Environment Variables
 const rcPublicSdkKeyIOS = String.fromEnvironment('RC_PUBLIC_SDK_KEY');
