@@ -12,12 +12,14 @@ workflows:
         script: |
           flutter pub get
 
-      - name: Build IPA with automatic code signing
+      - name: Build IPA with automatic code signing + auto bump build number
         script: |
-          xcode-project use-profiles
-          xcode-project build-ipa \
-            --workspace="ios/Runner.xcworkspace" \
-            --scheme="Runner" \
+          echo "⚙️ Using Codemagic BUILD_NUMBER: $BUILD_NUMBER"
+
+          flutter build ipa \
+            --release \
+            --build-name=1.0.0 \
+            --build-number=$BUILD_NUMBER \
             --dart-define=SUPABASE_URL=$SUPABASE_URL \
             --dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY \
             --dart-define=RC_PUBLIC_SDK_KEY=$RC_PUBLIC_SDK_KEY
@@ -30,5 +32,5 @@ workflows:
         api_key: $APP_STORE_CONNECT_PRIVATE_KEY
         key_id: $APP_STORE_CONNECT_KEY_IDENTIFIER
         issuer_id: $APP_STORE_CONNECT_ISSUER_ID
-        submit_to_app_store: false
+        submit_to_app_store: false   # You control whether to auto-submit
         submit_to_testflight: true
