@@ -9,24 +9,29 @@ class ChallengeService {
 
   ChallengeService(this.client, this.pointsService);
 
-  // DAILY LIMIT: max 20 answers per day per user
+  // DAILY LIMIT: max 20 "challenges" per day per user
+  // A "challenge" can be:
+  // - one open question
+  // - one multiple choice question
+  // - one crossword puzzle (whole puzzle counts as 1)
   static const int dailyQuestionLimit = 20;
 
   // -------------------------------------------------------------
-  // INTERNAL: how many answers this user has given today
+  // INTERNAL: how many challenges this user has completed today
+  // (open + mcq + crossword combined)
   // -------------------------------------------------------------
   Future<int> _getTodayAnswerCount(String userId) async {
+    // Use UTC date like 'YYYY-MM-DD'
     final today = DateTime.now().toUtc().toIso8601String().substring(0, 10);
 
     final res = await client
-        .from('user_answers')
+        .from('user_daily_challenges')
         .select('id')
         .eq('user_id', userId)
-        .gte('created_at', '$today 00:00:00+00')
-        .lte('created_at', '$today 23:59:59+00');
+        .eq('challenge_date', today);
 
     final List<dynamic> rows = res as List<dynamic>;
-    return rows.length;
+    return rows.length; // each row = 1 challenge done today
   }
 
   Future<void> _ensureCanAnswer(String userId) async {
@@ -38,6 +43,19 @@ class ChallengeService {
     }
   }
 
+  Future<void> _logDailyChallenge({
+    required String userId,
+    required String challengeType, // 'open', 'mcq', 'crossword'
+    required int challengeId,
+  }) async {
+    await client.from('user_daily_challenges').insert({
+      'user_id': userId,
+      'challenge_type': challengeType,
+      'challenge_id': challengeId,
+      // challenge_date will default to "today" in UTC via SQL default
+    });
+  }
+
   // -------------------------------------------------------------
   // OPEN / WRITTEN QUESTIONS (10 pts)
   // -------------------------------------------------------------
@@ -46,14 +64,24 @@ class ChallengeService {
     required int questionId,
     required String answerText,
   }) async {
+    // Check daily limit first
     await _ensureCanAnswer(userId);
 
+    // Store the user's answer
     await client.from('user_answers').insert({
       'user_id': userId,
       'question_id': questionId,
       'answer_text': answerText,
     });
 
+    // Log this as one daily challenge
+    await _logDailyChallenge(
+      userId: userId,
+      challengeType: 'open',
+      challengeId: questionId,
+    );
+
+    // Award points
     await pointsService.awardPoints(
       userId: userId,
       amount: 10,
@@ -70,14 +98,24 @@ class ChallengeService {
     required int questionId,
     required String chosenOption,
   }) async {
+    // Check daily limit first
     await _ensureCanAnswer(userId);
 
+    // Store the user's answer
     await client.from('user_answers').insert({
       'user_id': userId,
       'question_id': questionId,
       'answer_text': chosenOption,
     });
 
+    // Log this as one daily challenge
+    await _logDailyChallenge(
+      userId: userId,
+      challengeType: 'mcq',
+      challengeId: questionId,
+    );
+
+    // Award points
     await pointsService.awardPoints(
       userId: userId,
       amount: 8,
@@ -92,7 +130,7 @@ class ChallengeService {
   Future<List<Map<String, dynamic>>> getTodayChallenges(
     String userId,
   ) async {
-    // IDs this user has already answered
+    // IDs this user has already answered (based on user_answers)
     final answered = await client
         .from('user_answers')
         .select('question_id')
@@ -121,7 +159,8 @@ class ChallengeService {
           .toList();
     }
 
-    // Only keep up to 20 for today
+    // Only keep up to 20 candidates. The true per-day limit is enforced
+    // by _ensureCanAnswer when they actually answer.
     filtered = filtered.take(20).toList();
     return filtered;
   }
@@ -155,11 +194,13 @@ class ChallengeService {
   /// Check crossword answers.
   /// `answers` map: clueId -> userAnswer (string)
   /// Returns number of correct answers.
+  /// The entire crossword puzzle counts as ONE "challenge" toward the daily limit.
   Future<int> completeCrossword({
     required String userId,
     required int crosswordId,
     required Map<int, String> answers,
   }) async {
+    // Check daily limit (crossword counts as 1 challenge)
     await _ensureCanAnswer(userId);
 
     final res = await client
@@ -195,6 +236,13 @@ class ChallengeService {
         'answer_text': userAnswer,
       });
     }
+
+    // Log this as one daily challenge (the whole crossword)
+    await _logDailyChallenge(
+      userId: userId,
+      challengeType: 'crossword',
+      challengeId: crosswordId,
+    );
 
     if (correctCount > 0) {
       final points = correctCount * 5; // 5 pts per correct clue
