@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../data/supabase_client.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 
 class DailyDiceCard extends StatefulWidget {
   const DailyDiceCard({super.key});
@@ -9,7 +11,7 @@ class DailyDiceCard extends StatefulWidget {
 }
 
 class _DailyDiceCardState extends State<DailyDiceCard> {
-  final supa = SupabaseClientManager.client;
+  final supa = Supabase.instance.client;
 
   bool _busy = false;
   int? last;

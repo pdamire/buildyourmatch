@@ -1,5 +1,7 @@
 // lib/services/challenge_service.dart
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/challenge.dart';   // ✅ NEW
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'points_service.dart';
 
@@ -16,9 +18,12 @@ class ChallengeService {
   // - one crossword puzzle (whole puzzle counts as 1)
   static const int dailyQuestionLimit = 20;
 
+  // MINIMUM "CORE" QUESTIONS REQUIRED TO ENTER MATCHING POOL
+  static const int minQuestionsForMatching = 20;
+
   // -------------------------------------------------------------
   // INTERNAL: how many challenges this user has completed today
-  // (open + mcq + crossword combined)
+  // (open + mcq + crossword combined, logged in user_daily_challenges)
   // -------------------------------------------------------------
   Future<int> _getTodayAnswerCount(String userId) async {
     // Use UTC date like 'YYYY-MM-DD'
@@ -57,6 +62,30 @@ class ChallengeService {
   }
 
   // -------------------------------------------------------------
+  // CORE QUESTION PROGRESS FOR MATCHING
+  // -------------------------------------------------------------
+
+  // Count how many "core" psychology questions this user has answered.
+  // We mark those with is_core = true in user_answers.
+  Future<int> _getCoreAnswerCount(String userId) async {
+    final res = await client
+        .from('user_answers')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('is_core', true);
+
+    final List<dynamic> rows = res as List<dynamic>;
+    return rows.length;
+  }
+
+  // Public helper: does this user have enough answers
+  // to be included in the matching algorithm?
+  Future<bool> hasCompletedInitialQuestionSet(String userId) async {
+    final coreCount = await _getCoreAnswerCount(userId);
+    return coreCount >= minQuestionsForMatching;
+  }
+
+  // -------------------------------------------------------------
   // OPEN / WRITTEN QUESTIONS (10 pts)
   // -------------------------------------------------------------
   Future<void> completeOpenQuestion({
@@ -72,6 +101,7 @@ class ChallengeService {
       'user_id': userId,
       'question_id': questionId,
       'answer_text': answerText,
+      'is_core': true, // counts toward the initial 20 for matching
     });
 
     // Log this as one daily challenge
@@ -81,7 +111,7 @@ class ChallengeService {
       challengeId: questionId,
     );
 
-    // Award points
+    // Award points (your original values)
     await pointsService.awardPoints(
       userId: userId,
       amount: 10,
@@ -106,6 +136,7 @@ class ChallengeService {
       'user_id': userId,
       'question_id': questionId,
       'answer_text': chosenOption,
+      'is_core': true, // counts toward the initial 20 for matching
     });
 
     // Log this as one daily challenge
@@ -115,7 +146,7 @@ class ChallengeService {
       challengeId: questionId,
     );
 
-    // Award points
+    // Award points (your original values)
     await pointsService.awardPoints(
       userId: userId,
       amount: 8,
@@ -195,6 +226,7 @@ class ChallengeService {
   /// `answers` map: clueId -> userAnswer (string)
   /// Returns number of correct answers.
   /// The entire crossword puzzle counts as ONE "challenge" toward the daily limit.
+  /// NOTE: crossword answers do NOT count toward the initial 20 "core" questions.
   Future<int> completeCrossword({
     required String userId,
     required int crosswordId,
@@ -234,6 +266,7 @@ class ChallengeService {
         'user_id': userId,
         'question_id': id, // reuse id as "question" id for crossword clues
         'answer_text': userAnswer,
+        // is_core left as default false; crossword does NOT count toward initial 20
       });
     }
 
@@ -245,7 +278,7 @@ class ChallengeService {
     );
 
     if (correctCount > 0) {
-      final points = correctCount * 5; // 5 pts per correct clue
+      final points = correctCount * 5; // your original value
       await pointsService.awardPoints(
         userId: userId,
         amount: points,
@@ -258,5 +291,32 @@ class ChallengeService {
     }
 
     return correctCount;
+  }
+    // -------------------------------------------------------------
+  // DAILY CHALLENGES FOR HOME PAGE (returns List<Challenge>)
+  // -------------------------------------------------------------
+  Future<List<Challenge>> fetchDailyChallenges() async {
+    try {
+      // For now, this assumes you have a `challenges` table that matches
+      // your Challenge.fromMap(...) constructor. You can adjust the
+      // table name / fields later if needed.
+      final res = await client
+          .from('challenges')
+          .select()
+          .order('id', ascending: true)
+          .limit(20);
+
+      if (res is List) {
+        return res
+            .map((row) => Challenge.fromMap(row as Map<String, dynamic>))
+            .toList();
+      }
+
+      return [];
+    } catch (e) {
+      // If anything fails, return empty list so UI won't crash.
+      // You can show a SnackBar in the UI if you want to surface the error.
+      return [];
+    }
   }
 }

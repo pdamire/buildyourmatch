@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'theme.dart';
+// ignore: unused_import
 import 'data/supabase_client.dart';
 import 'features/auth/auth_gate.dart';
 import 'features/home/home_page.dart';
@@ -20,13 +21,15 @@ import 'services/points_service.dart';
 import 'services/daily_dice_service.dart';
 import 'services/challenge_service.dart';
 import 'services/match_service.dart';
-import 'user_bootstrap.dart';
+
 // These read from Codemagic Environment Variables
 const rcPublicSdkKeyIOS = String.fromEnvironment('RC_PUBLIC_SDK_KEY');
 const supabaseUrl = String.fromEnvironment('SUPABASE_URL');
 const supabaseAnonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
+
 final _router = GoRouter(
-  initialLocation: '/home',
+  // ✅ START APP AT AUTH GATE
+  initialLocation: '/gate',
   routes: [
     GoRoute(path: '/gate', builder: (_, __) => const AuthGate()),
     GoRoute(path: '/home', builder: (_, __) => const HomePage()),
@@ -36,10 +39,13 @@ final _router = GoRouter(
     GoRoute(path: '/chat', builder: (_, __) => const ChatPage()),
     GoRoute(path: '/store', builder: (_, __) => const PointsStorePage()),
     GoRoute(path: '/admin', builder: (_, __) => const AdminPage()),
-    GoRoute(path: '/challenge', builder: (context, state) {
-      final c = state.extra as Challenge?;
-      return ChallengePage(challenge: c);
-    }),
+    GoRoute(
+      path: '/challenge',
+      builder: (context, state) {
+        final c = state.extra as Challenge?;
+        return ChallengePage(challenge: c);
+      },
+    ),
   ],
 );
 
@@ -52,21 +58,22 @@ void main() async {
     anonKey: supabaseAnonKey,
   );
 
-  // 2. Initialize your user in the database
+  // 2. Initialize your user in the database (optional)
   final client = Supabase.instance.client;
   // await UserBootstrapService(client).ensureUserInitialized();
 
   // 3. Initialize RevenueCat using the environment key
-  await RevenueCatPurchase.setup(rcPubLicSdkKeyIOS);
+  await RevenueCatPurchase.setup(rcPublicSdkKeyIOS);
 
   // 4. Launch the app
   runApp(const BYMApp());
 }
 
-
 class BYMApp extends StatelessWidget {
   const BYMApp({super.key});
-  @override Widget build(BuildContext context){
+
+  @override
+  Widget build(BuildContext context) {
     return MaterialApp.router(
       title: 'Build Your Match',
       theme: buildAppTheme(),
@@ -79,7 +86,13 @@ class BYMApp extends StatelessWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('en'), Locale('es'), Locale('fa'), Locale('he'), Locale('ar'), Locale('fr'), Locale('zh'),
+        Locale('en'),
+        Locale('es'),
+        Locale('fa'),
+        Locale('he'),
+        Locale('ar'),
+        Locale('fr'),
+        Locale('zh'),
       ],
     );
   }

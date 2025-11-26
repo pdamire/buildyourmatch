@@ -1,23 +1,23 @@
 import 'package:flutter/material.dart';
-import '../../data/supabase_client.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AuthGate extends StatefulWidget { const AuthGate({super.key}); @override State<AuthGate> createState()=>_AuthGateState(); }
-class _AuthGateState extends State<AuthGate> {
-  final emailCtrl = TextEditingController();
-  @override Widget build(BuildContext context){
-    return Scaffold(
-      appBar: AppBar(title: const Text('Build Your Match')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(children:[
-          TextField(controller: emailCtrl, decoration: const InputDecoration(labelText:'Email')),
-          const SizedBox(height: 12),
-          FilledButton(onPressed: () async {
-            await supa.auth.signInWithOtp(email: emailCtrl.text);
-            if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Check your email.')));
-          }, child: const Text('Send magic link')),
-        ]),
-      ),
-    );
+import '../home/home_page.dart';
+import '../../auth/email_auth_page.dart';
+
+class AuthGate extends StatelessWidget {
+  const AuthGate({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final client = Supabase.instance.client;
+    final session = client.auth.currentSession;
+
+    // ✅ If there is NO logged-in user → go to email/password auth page
+    if (session == null) {
+      return EmailAuthPage();
+    }
+
+    // ✅ If user is logged in → go straight to HomePage
+    return HomePage();
   }
 }

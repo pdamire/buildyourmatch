@@ -10,8 +10,7 @@ import '../../services/challenge_service.dart';
 import '../../services/match_service.dart';
 import '../progress/widgets/gm_progress_ring.dart';
 import 'daily_dice_card.dart';
-import '../../pages/profile_page.dart'; 
-
+import '../../pages/profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -37,19 +36,15 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
 
-    // Supabase client
     _client = Supabase.instance.client;
 
-    // Services
     _pointsService = PointsService(_client);
     _dailyDiceService = DailyDiceService(_client, _pointsService);
     _challengeService = ChallengeService(_client, _pointsService);
     _matchService = MatchService(_client);
 
-    // Load today’s challenges
     fut = _challengeService.fetchDailyChallenges();
 
-    // Load balance
     _userId = _client.auth.currentUser?.id;
     _loadBalance();
   }
@@ -75,23 +70,47 @@ class _HomePageState extends State<HomePage> {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => ProfilePage(),
+                  builder: (_) => const ProfilePage(),
                 ),
               );
             },
           ),
+
           // Store / points page
           IconButton(
-            onPressed: () => context.push('/store'),
             icon: const Icon(Icons.bolt),
+            tooltip: 'Points store',
+            onPressed: () {
+              context.push('/store');
+            },
           ),
+
           // Admin page (optional)
           IconButton(
-            onPressed: () => context.push('/admin'),
             icon: const Icon(Icons.admin_panel_settings),
+            tooltip: 'Admin',
+            onPressed: () {
+              context.push('/admin');
+            },
+          ),
+
+          // Logout button
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Log out',
+            onPressed: () async {
+              final client = Supabase.instance.client;
+              await client.auth.signOut();
+
+              if (context.mounted) {
+                // Go back to the auth gate (which shows EmailAuthPage)
+                context.go('/gate');
+              }
+            },
           ),
         ],
       ),
+
       body: ListView(
         children: [
           // Header card
@@ -113,7 +132,6 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          // You can later wire this to _balance, streaks, etc.
                           'Streak: 3 days   XP: 75',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
@@ -188,12 +206,13 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 24),
         ],
       ),
+
       bottomNavigationBar: NavigationBar(
         selectedIndex: 0,
         onDestinationSelected: (i) {
           switch (i) {
             case 0:
-              // Already on home
+              // already on home
               break;
             case 1:
               context.push('/progress');
