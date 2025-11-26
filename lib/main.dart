@@ -75,7 +75,7 @@ class BYMApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Build Your Match',
+      title: 'BYM – TEST BUILD',
       theme: buildAppTheme(),
       darkTheme: buildAppThemeDark(),
       themeMode: ThemeMode.system,
