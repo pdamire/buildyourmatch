@@ -42,7 +42,7 @@ final _router = GoRouter(
     GoRoute(
       path: '/challenge',
       builder: (context, state) {
-        final c = state.extra as Challenge?;
+        final c = state.extra as Challenge;
         return ChallengePage(challenge: c);
       },
     ),

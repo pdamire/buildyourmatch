@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../home/home_page.dart';
-import '../../auth/email_auth_page.dart';
+import 'email_auth_page.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});

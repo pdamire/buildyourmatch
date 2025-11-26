@@ -70,7 +70,7 @@ class MatchService {
     // If I have a non-empty seeking list, only consider those genders
     if (seeking.isNotEmpty) {
       // assumes `gender` is a single value, not an array
-      query = query.in_('gender', seeking);
+      query = query.contains('gender', seeking);
     }
 
     final res = await query.limit(50); // fetch a bigger pool, we’ll filter
